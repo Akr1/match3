@@ -4,6 +4,7 @@
 
 [node name="piece" type="Node2D"]
 script = ExtResource( 1 )
+color = "Null"
 
 [node name="Sprite" type="Sprite" parent="."]
 scale = Vector2( 0.5, 0.5 )
