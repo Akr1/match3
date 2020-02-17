@@ -8,3 +8,5 @@ color = "Null"
 
 [node name="Sprite" type="Sprite" parent="."]
 scale = Vector2( 0.5, 0.5 )
+
+[node name="move_tween" type="Tween" parent="."]
