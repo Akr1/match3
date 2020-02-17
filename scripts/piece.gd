@@ -3,6 +3,7 @@ extends Node2D
 # Esto hace que la variable color sea visible en el inspector
 export (String) var color;
 var move_tween;
+var matched = false;
 
 # Declare member variables here. Examples:
 
@@ -23,3 +24,8 @@ func move(target):
 # This is called every frame
 #func _process(delta):
 #	pass
+
+func dim():
+	var sprite = get_node("Sprite");
+	sprite.modulate = Color(1,1,1,.5);
+	
