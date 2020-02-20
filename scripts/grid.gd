@@ -105,11 +105,12 @@ func touch_input():
 func swap_pieces(column, row, direction):
 	var first_piece = all_pieces[column][row];
 	var other_piece = all_pieces[column + direction.x][row + direction.y];
-	all_pieces[column][row] = other_piece;
-	all_pieces[column + direction.x][row + direction.y] = first_piece;
-	first_piece.move(grid_to_pixel(column + direction.x, row + direction.y));
-	other_piece.move(grid_to_pixel(column,row));
-	find_matches();
+	if first_piece != null && other_piece != null:
+		all_pieces[column][row] = other_piece;
+		all_pieces[column + direction.x][row + direction.y] = first_piece;
+		first_piece.move(grid_to_pixel(column + direction.x, row + direction.y));
+		other_piece.move(grid_to_pixel(column,row));
+		find_matches();
 
 #Decides which piece is to move and in which direction it should move.
 #Takes two arguments: First grid position(initial touch), and the final grid position.(release)
@@ -126,6 +127,7 @@ func touch_difference(grid_1, grid_2):
 		elif difference.y < 0:
 			swap_pieces(grid_1.x, grid_1.y, Vector2(0,-1));
 # Called every frame. 'delta' is the elapsed time since the previous frame.
+# warning-ignore:unused_argument
 func _process(delta):
 	touch_input();
 	
@@ -152,5 +154,17 @@ func find_matches():
 							all_pieces[i][j].dim();
 							all_pieces[i][j+1].matched =true;
 							all_pieces[i][j+1].dim();
-				
-	pass;
+	get_parent().get_node("destroy_timer").start();
+
+# Checks if there are matched pieces, if there are, it will
+#destroy them from the queue
+func destroy_matched():
+	for i in width:
+		for j in height:
+			if all_pieces[i][j] != null:
+				if all_pieces[i][j].matched:
+					all_pieces[i][j].queue_free(); 
+					all_pieces[i][j] = null;
+
+func _on_destroy_timer_timeout():
+	destroy_matched();
