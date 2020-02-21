@@ -7,6 +7,8 @@ export (int) var height;
 export (int) var x_start;
 export (int) var y_start;
 export (int) var offset;
+#how much above everything i want the piece to start
+export (int) var y_offset;
 
 var possible_pieces = [
 preload("res://scenes/yellow_piece.tscn"),
@@ -177,7 +179,7 @@ func collapse_columns():
 						all_pieces[i][j] = all_pieces[i][k];
 						all_pieces[i][k] = null;
 						break;
-	get_parent().get_node("refill_timer").start()
+	get_parent().get_node("refill_timer").start();
 						
 func refill_columns():
 		for i in width:
@@ -193,7 +195,9 @@ func refill_columns():
 						piece = possible_pieces[rand].instance();
 					#Instance that piece from the array
 					add_child(piece);
-					piece.position = grid_to_pixel(i, j);
+					#-y_offset because coordinates start from upper left
+					piece.position = grid_to_pixel(i, j - y_offset);
+					piece.move(grid_to_pixel(i,j))
 					all_pieces[i][j] = piece;
 	
 
