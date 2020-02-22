@@ -1,5 +1,8 @@
 extends Node2D
 
+# State Machine
+enum {wait, move}
+var state;
 
 # Grid Variables
 export (int) var width;
@@ -30,6 +33,7 @@ var controlling = false;
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	state = move;
 	randomize();
 	all_pieces = make_2d_array();
 	spawn_pieces();
@@ -108,6 +112,7 @@ func swap_pieces(column, row, direction):
 	var first_piece = all_pieces[column][row];
 	var other_piece = all_pieces[column + direction.x][row + direction.y];
 	if first_piece != null && other_piece != null:
+		state = wait;
 		all_pieces[column][row] = other_piece;
 		all_pieces[column + direction.x][row + direction.y] = first_piece;
 		first_piece.move(grid_to_pixel(column + direction.x, row + direction.y));
@@ -131,7 +136,8 @@ func touch_difference(grid_1, grid_2):
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 # warning-ignore:unused_argument
 func _process(delta):
-	touch_input();
+	if state == move:
+		touch_input();
 	
 func find_matches():
 	for i in width:
@@ -182,25 +188,36 @@ func collapse_columns():
 	get_parent().get_node("refill_timer").start();
 						
 func refill_columns():
-		for i in width:
-			for j in height:
-				if all_pieces[i][j] == null:
-					#choose a random number and store it
-					var rand = floor(rand_range(0, possible_pieces.size()));	
-					var piece = possible_pieces[rand].instance();
-					var loops = 0;
-					while(match_at(i,j,piece.color) && loops < 100):
-						rand = floor(rand_range(0,possible_pieces.size()));
-						loops += 1;
-						piece = possible_pieces[rand].instance();
-					#Instance that piece from the array
-					add_child(piece);
-					#-y_offset because coordinates start from upper left
-					piece.position = grid_to_pixel(i, j - y_offset);
-					piece.move(grid_to_pixel(i,j))
-					all_pieces[i][j] = piece;
+	for i in width:
+		for j in height:
+			if all_pieces[i][j] == null:
+				#choose a random number and store it
+				var rand = floor(rand_range(0, possible_pieces.size()));	
+				var piece = possible_pieces[rand].instance();
+				var loops = 0;
+				while(match_at(i,j,piece.color) && loops < 100):
+					rand = floor(rand_range(0,possible_pieces.size()));
+					loops += 1;
+					piece = possible_pieces[rand].instance();
+				#Instance that piece from the array
+				add_child(piece);
+				#-y_offset because coordinates start from upper left
+				piece.position = grid_to_pixel(i, j - y_offset);
+				piece.move(grid_to_pixel(i,j))
+				all_pieces[i][j] = piece;
+	after_refill();
 	
-
+	
+#Cycles through the grid after a refill to check if new matches generated
+func after_refill():
+	for i in width:
+		for j in height:
+			if all_pieces[i][j] != null:
+				if match_at(i,j,all_pieces[i][j].color):
+					find_matches();
+					return
+	state = move
+					
 func _on_destroy_timer_timeout():
 	destroy_matched();
 
