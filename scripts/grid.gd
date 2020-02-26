@@ -13,6 +13,9 @@ export (int) var offset;
 #how much above everything i want the piece to start
 export (int) var y_offset;
 
+#Obstacle variables
+export (PoolVector2Array) var empty_spaces
+
 var possible_pieces = [
 preload("res://scenes/yellow_piece.tscn"),
 preload("res://scenes/blue_piece.tscn"),
@@ -44,6 +47,12 @@ func _ready():
 	randomize();
 	all_pieces = make_2d_array();
 	spawn_pieces();
+	
+func restricted_movement(place):
+	for i in empty_spaces.size():
+		if empty_spaces[i] ==  place:
+			return true
+	return false
 
 func make_2d_array():
 	var array = [];
@@ -57,18 +66,20 @@ func make_2d_array():
 func spawn_pieces():
 	for i in width:
 		for j in height:
-			#choose a random number and store it
-			var rand = floor(rand_range(0, possible_pieces.size()));	
-			var piece = possible_pieces[rand].instance();
-			var loops = 0;
-			while(match_at(i,j,piece.color) && loops < 100):
-				rand = floor(rand_range(0,possible_pieces.size()));
-				loops += 1;
-				piece = possible_pieces[rand].instance();
-			#Instance that piece from the array
-			add_child(piece);
-			piece.position = grid_to_pixel(i, j);
-			all_pieces[i][j] = piece;
+			#Make sure its not a restricted movement place first
+			if !restricted_movement(Vector2(i,j)):
+				#choose a random number and store it
+				var rand = floor(rand_range(0, possible_pieces.size()));	
+				var piece = possible_pieces[rand].instance();
+				var loops = 0;
+				while(match_at(i,j,piece.color) && loops < 100):
+					rand = floor(rand_range(0,possible_pieces.size()));
+					loops += 1;
+					piece = possible_pieces[rand].instance();
+				#Instance that piece from the array
+				add_child(piece);
+				piece.position = grid_to_pixel(i, j);
+				all_pieces[i][j] = piece;
 #Check to see what the column and row are and based on that check left, down or
 #both
 func match_at(i, j, color):
@@ -208,7 +219,7 @@ func destroy_matched():
 func collapse_columns():
 	for i in width:
 		for j in height:
-			if all_pieces[i][j] == null:
+			if all_pieces[i][j] == null && !restricted_movement(Vector2(i,j)):
 				for k in range(j + 1, height):
 					if all_pieces[i][k] != null:
 						all_pieces[i][k].move(grid_to_pixel(i,j));
@@ -220,7 +231,7 @@ func collapse_columns():
 func refill_columns():
 	for i in width:
 		for j in height:
-			if all_pieces[i][j] == null:
+			if all_pieces[i][j] == null && !restricted_movement(Vector2(i,j)):
 				#choose a random number and store it
 				var rand = floor(rand_range(0, possible_pieces.size()));	
 				var piece = possible_pieces[rand].instance();
