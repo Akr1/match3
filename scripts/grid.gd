@@ -42,6 +42,7 @@ preload("res://scenes/light_green_piece.tscn")
 
 #The current pieces in the scene
 var all_pieces = [];
+var current_matches = []
 
 # Swap back variables
 var piece_one = null
@@ -245,26 +246,65 @@ func find_matches():
 							match_and_dim(all_pieces[i-1][j])
 							match_and_dim(all_pieces[i][j])
 							match_and_dim(all_pieces[i+1][j])
+							add_to_array(Vector2(i,j))
+							add_to_array(Vector2(i + 1, j))
+							add_to_array(Vector2(i - 1, j))
 				if j > 0 && j < height - 1:
 					if !is_piece_null(i,j-1) && !is_piece_null(i,j+1):
 						if all_pieces[i][j-1].color == current_color && all_pieces[i][j+1].color == current_color:
 							match_and_dim(all_pieces[i][j-1])
 							match_and_dim(all_pieces[i][j])
 							match_and_dim(all_pieces[i][j+1])
+							add_to_array(Vector2(i,j))
+							add_to_array(Vector2(i, j+1))
+							add_to_array(Vector2(i, j-1))
 	get_parent().get_node("destroy_timer").start();
 
 func is_piece_null(column, row):
 	if all_pieces[column][row] == null:
 		return true
 	return false
+	
+#Adds item into an array if the value to be added is not currently in the array
+# array_to_add = current_matches is the default value
+func add_to_array(value, array_to_add = current_matches):
+	if !array_to_add.has(value):
+		array_to_add.append(value)
 
 func match_and_dim(item):
 	item.matched = true 
 	item.dim()
 
+func find_bombs():
+	#Iterate over current_matches array
+	for i in current_matches.size():
+		var current_column = current_matches[i].x
+		var current_row = current_matches[i].y
+		var current_color = all_pieces[current_column][current_row].color
+		var col_matched = 0
+		var row_matched = 0
+		#Iterate over current_matches to check for column, row and color
+		for j in current_matches.size():
+			var this_column = current_matches[j].x
+			var this_row = current_matches[j].y
+			var this_color = all_pieces[current_column][current_row].color
+			if this_column == current_column && current_color == this_color:
+				col_matched += 1
+			if this_row == current_row and this_color == current_color:
+				row_matched += 1
+			if col_matched == 4:
+				print("column bomb")
+			if row_matched == 4:
+				print("row bomb")
+			if col_matched == 3 and row_matched == 3:
+				print("adjacent bomb")	
+			if col_matched == 5 or row_matched == 5:
+				print("color bomb")	
+
 # Checks if there are matched pieces, if there are, it will
 #destroy them from the queue
 func destroy_matched():
+	find_bombs()
 	var was_matched = false;
 	for i in width:
 		for j in height:
@@ -279,6 +319,7 @@ func destroy_matched():
 		get_parent().get_node("collapse_timer").start();
 	else:
 		swap_back()
+	current_matches.clear()
 
 func check_concrete(column, row):
 	#Check right
