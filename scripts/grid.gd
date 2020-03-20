@@ -292,14 +292,43 @@ func find_bombs():
 				col_matched += 1
 			if this_row == current_row and this_color == current_color:
 				row_matched += 1
-			if col_matched == 4:
-				print("column bomb")
-			if row_matched == 4:
-				print("row bomb")
-			if col_matched == 3 and row_matched == 3:
-				print("adjacent bomb")	
+			#Ordered in terms of priority
 			if col_matched == 5 or row_matched == 5:
 				print("color bomb")	
+				return
+			if col_matched == 3 and row_matched == 3:
+				make_bomb(0,current_color)	
+				return
+			if col_matched == 4:
+				make_bomb(1, current_color)
+				return
+			if row_matched == 4:
+				make_bomb(2, current_color)
+				return
+
+				
+func make_bomb(bomb_type, color):
+	#iterate over current_matches
+	for i in current_matches.size():
+		#cache some variables
+		var current_column = current_matches[i].x
+		var current_row = current_matches[i].y
+		if all_pieces[current_column][current_row] == piece_one and piece_one.color == color:
+			#Convert piece_one into a bomb piece
+			piece_one.matched = false
+			change_bomb(bomb_type, piece_one)
+		elif all_pieces[current_column][current_row] == piece_two and piece_two.color == color:
+			#Turn piece_Two into a bomb
+			piece_two.matched = false
+			change_bomb(bomb_type, piece_two)
+
+func change_bomb(bomb_type, piece):
+	if bomb_type == 0:
+		piece.make_adjacent_bomb()
+	elif bomb_type == 1:
+		piece.make_row_bomb()
+	elif bomb_type == 2:
+		piece.make_column_bomb()
 
 # Checks if there are matched pieces, if there are, it will
 #destroy them from the queue
